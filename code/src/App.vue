@@ -5,7 +5,7 @@
 </template>
 
 <script>
-import BestTransport from './components/BestTransport.vue'
+import BestTransport from './components/BestTransport.vue';
 
 export default {
   name: 'App',
