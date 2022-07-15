@@ -3,7 +3,7 @@
   <div class="title">
     <b-navbar toggleable="lg" type="dark" variant="info">
     <div>
-      <b-img :src="require('../assets/logo.png')" fluid class="logo" alt="Responsive image"></b-img>
+      <b-img :src="require('../assets/logo.png')" fluid class="logo" alt="Logo do Best Transport"></b-img>
     </div>
       <b-navbar-brand class="ml-2">
         <b>{{ appName }}</b>
@@ -18,15 +18,32 @@
         <p>Destino</p>
         <b-form-select v-model="selected" class="mb-3 destiny-select">
           <b-form-select-option :value="null">Selecione aqui o destino do frete</b-form-select-option>
-          <b-form-select-option v-bind:key="entry.city" v-for="entry in fetchData">{{entry.city}}</b-form-select-option>
+          <b-form-select-option v-for="(entry, i) in selectList" v-bind:key="i" :value="entry">{{entry}}</b-form-select-option>
         </b-form-select>
         <p>Peso</p>
         <b-form-input v-model="text" class="weight-input" placeholder="Insira aqui o peso da carga em kg"></b-form-input>
       </div>
-      <b-button variant="success" class="submit-btn">Analisar</b-button>
+      <b-button variant="success" class="submit-btn" v-on:click="analisarEntradas">Analisar</b-button>
     </section>
-    <section>
+    <section class="output-container">
+      <h2>Estas são as melhores alternativas de frete que encontramos pra você: </h2>
+      <hr class="main-title-decorator" size="2">
+      <div>
+        <b-jumbotron class="output-jumbotron jumbo-1">
+          <b-img :src="require('../assets/moneybag.png')" fluid class="jumbo-icon" alt="Ícone de uma sacola de dinheiro"></b-img>
+          <p>Frete mais barato: <span>{{maisBarato}}</span></p>
+        </b-jumbotron>
+      </div>
+      <div>
+        <b-jumbotron class="output-jumbotron jumbo-2">
+        <b-img :src="require('../assets/clock.png')" fluid class="jumbo-icon" alt="Ícone de um relógio"></b-img>
+          <p>Frete mais rápido: <span>{{maisRapido}}</span></p>
+        </b-jumbotron>
+      </div>
     </section>
+    <div class="no-display">
+      {{fetchData}}
+    </div>
   </main>
 </div>
 </template>
@@ -44,27 +61,72 @@ export default {
   },
   data() {
     const appName = '';
-    const fetchData = '';
+    const selectList = new Set();
+    const fetchData = [];
+    const maisBarato = '';
+    const maisRapido = '';
 
     return {
       appName,
       selected: null,
-      fetchData
+      fetchData,
+      maisBarato,
+      maisRapido,
+      selectList
     }
   },
   created() {
     this.axios.get('http://localhost:3000/transport')
       .then(response => {
         this.fetchData = response.data;
+        this.fetchData.forEach((entry) => {
+          this.selectList.add(entry.city);
+        })
       });
     this.appName = 'Melhor frete'
   },
   methods: {
     // Implemente aqui os metodos utilizados na pagina
     analisarEntradas() {
-      
+      let destino = document.querySelector(".destiny-select");
+      let valor = document.querySelector(".weight-input");
+      let heavy;
+      valor.value > 100 ? heavy = true : heavy = false;
+      let cheaper;
+      let faster;
+
+      const filtered = this.fetchData.filter((entry) => {
+        return entry.city == destino.value;
+      });
+
+      if(heavy) {
+        let final = filtered.map((element) => {
+          return element.cost_transport_heavy.split(' ')[1];
+        });
+        let min = Math.min(...final);
+        cheaper = filtered.filter((entry) => {
+          return entry.cost_transport_heavy.split(' ')[1] == min
+        })[0];
+      } else {
+        let final = filtered.map((element) => {
+          return element.cost_transport_light.split(' ')[1];
+        });
+        let min = Math.min(...final);
+        cheaper = filtered.filter((entry) => {
+          return entry.cost_transport_light.split(' ')[1] == min
+        })[0];
+      }
+
+      this.maisBarato = `Transportadora ${cheaper.name} - R$${heavy? (cheaper.cost_transport_heavy.split(' ')[1] * valor.value).toFixed(2) : (cheaper.cost_transport_light.split(' ')[1] * valor.value).toFixed(2)} - ${cheaper.lead_time}`;
+
+      let splitFaster = filtered.map(entry => entry.lead_time.split('h')[0]);
+      let fewerHours = Math.min(...splitFaster);
+      faster = filtered.filter((entry) => {
+        return entry.lead_time.split('h')[0] == fewerHours;
+      })[0];
+      this.maisRapido = `Transportadora ${faster.name} - R$${heavy? (faster.cost_transport_heavy.split(' ')[1] * valor.value).toFixed(2) : (faster.cost_transport_light.split(' ')[1] * valor.value).toFixed(2)} - ${faster.lead_time}`;
     },
-  },
+  }
 }
 </script>
 
@@ -98,7 +160,7 @@ export default {
     border-top: none;
   }
 
-  .main-container h2 {
+  h2 {
     margin-left: 1rem;
   }
 
@@ -143,5 +205,38 @@ export default {
     margin-left: 15%;
     font-weight: 700;
     min-width: 15%;
+  }
+
+  .output-jumbotron {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: .5rem;
+    height: 4rem;
+    border-radius: 15px;
+  }
+
+  .output-jumbotron p {
+    margin: 0;
+  }
+
+  .jumbo-icon {
+    padding: .5rem;
+    width:3rem;
+    height:3rem;
+  }
+
+  .jumbo-1 {
+    border: 2px dashed #328a21;
+    background-color: #acd4e8;
+  }
+
+  .jumbo-2 {
+    border: 2px dashed #426cbd;
+    background-color: #9dc0d1;
+  }
+
+  .no-display {
+    display:none;
   }
 </style>
