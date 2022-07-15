@@ -15,7 +15,7 @@
     <hr class="main-title-decorator" size="2">
     <section class="inputs-container">
       <div>
-        <p>Destino</p>
+        <p>destiny</p>
         <b-form-select v-model="selected" class="mb-3 destiny-select">
           <b-form-select-option :value="null">Selecione aqui o destino do frete</b-form-select-option>
           <b-form-select-option v-for="(entry, i) in selectList" v-bind:key="i" :value="entry">{{entry}}</b-form-select-option>
@@ -31,13 +31,13 @@
       <div>
         <b-jumbotron class="output-jumbotron jumbo-1">
           <b-img :src="require('../assets/moneybag.png')" fluid class="jumbo-icon" alt="Ícone de uma sacola de dinheiro"></b-img>
-          <p>Frete mais barato: <span>{{maisBarato}}</span></p>
+          <p>Frete mais barato: <span>{{cheapOption}}</span></p>
         </b-jumbotron>
       </div>
       <div>
         <b-jumbotron class="output-jumbotron jumbo-2">
         <b-img :src="require('../assets/clock.png')" fluid class="jumbo-icon" alt="Ícone de um relógio"></b-img>
-          <p>Frete mais rápido: <span>{{maisRapido}}</span></p>
+          <p>Frete mais rápido: <span>{{fastOption}}</span></p>
         </b-jumbotron>
       </div>
     </section>
@@ -63,15 +63,15 @@ export default {
     const appName = '';
     const selectList = new Set();
     const fetchData = [];
-    const maisBarato = '';
-    const maisRapido = '';
+    const cheapOption = '';
+    const fastOption = '';
 
     return {
       appName,
       selected: null,
       fetchData,
-      maisBarato,
-      maisRapido,
+      cheapOption,
+      fastOption,
       selectList
     }
   },
@@ -88,15 +88,15 @@ export default {
   methods: {
     // Implemente aqui os metodos utilizados na pagina
     analisarEntradas() {
-      let destino = document.querySelector(".destiny-select");
-      let valor = document.querySelector(".weight-input");
+      let destiny = document.querySelector(".destiny-select");
+      let inputValue = document.querySelector(".weight-input");
       let heavy;
-      valor.value > 100 ? heavy = true : heavy = false;
+      inputValue.value > 100 ? heavy = true : heavy = false;
       let cheaper;
       let faster;
 
       const filtered = this.fetchData.filter((entry) => {
-        return entry.city == destino.value;
+        return entry.city == destiny.value;
       });
 
       if(heavy) {
@@ -117,14 +117,14 @@ export default {
         })[0];
       }
 
-      this.maisBarato = `Transportadora ${cheaper.name} - R$${heavy? (cheaper.cost_transport_heavy.split(' ')[1] * valor.value).toFixed(2) : (cheaper.cost_transport_light.split(' ')[1] * valor.value).toFixed(2)} - ${cheaper.lead_time}`;
+      this.cheapOption = `Transportadora ${cheaper.name} - R$${heavy? (cheaper.cost_transport_heavy.split(' ')[1] * inputValue.value).toFixed(2) : (cheaper.cost_transport_light.split(' ')[1] * inputValue.value).toFixed(2)} - ${cheaper.lead_time}`;
 
       let splitFaster = filtered.map(entry => entry.lead_time.split('h')[0]);
       let fewerHours = Math.min(...splitFaster);
       faster = filtered.filter((entry) => {
         return entry.lead_time.split('h')[0] == fewerHours;
       })[0];
-      this.maisRapido = `Transportadora ${faster.name} - R$${heavy? (faster.cost_transport_heavy.split(' ')[1] * valor.value).toFixed(2) : (faster.cost_transport_light.split(' ')[1] * valor.value).toFixed(2)} - ${faster.lead_time}`;
+      this.fastOption = `Transportadora ${faster.name} - R$${heavy? (faster.cost_transport_heavy.split(' ')[1] * inputValue.value).toFixed(2) : (faster.cost_transport_light.split(' ')[1] * inputValue.value).toFixed(2)} - ${faster.lead_time}`;
     },
   }
 }
@@ -238,5 +238,9 @@ export default {
 
   .no-display {
     display:none;
+  }
+
+  p span {
+    font-weight: 700;
   }
 </style>
